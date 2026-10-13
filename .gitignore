@@ -1,0 +1,17 @@
+tools/ghidra_dir/
+tools/ghidra_proj/
+tools/jdk/
+tools/dotnet/
+tools/Il2CppDumper/
+tools/*.zip
+tools/*.tar.gz
+tools/dotnet-install.*
+tools/*.ref
+*.dll
+*.exe
+game-modded/
+recovered/
+inputs/
+.claude/
+*.log
+e main
