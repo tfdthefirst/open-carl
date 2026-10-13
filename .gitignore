@@ -9,7 +9,8 @@ tools/dotnet-install.*
 tools/*.ref
 *.dll
 *.exe
-game-modded/
+game-modded/*
+!game-modded/version.dll
 recovered/
 inputs/
 .claude/
