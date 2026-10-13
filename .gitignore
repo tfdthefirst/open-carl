@@ -1,3 +1,4 @@
+# Third-party tools (download separately)
 tools/ghidra_dir/
 tools/ghidra_proj/
 tools/jdk/
@@ -7,12 +8,10 @@ tools/*.zip
 tools/*.tar.gz
 tools/dotnet-install.*
 tools/*.ref
-*.dll
-*.exe
-game-modded/*
-!game-modded/version.dll
-recovered/
+tools/version_real.dll
+
+# Local / junk
 inputs/
 .claude/
 *.log
-e main
+game-modded/vkd3d-proton.cache*

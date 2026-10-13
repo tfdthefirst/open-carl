@@ -258,8 +258,8 @@ static DWORD WINAPI worker(LPVOID _){
 
 /* ---- forward version.dll exports to the REAL Wine version.dll (so the game's
  *      version queries return real data and don't crash). ---- */
-#define RV_PATH L"Z:\\home\\battledoge\\Games\\open-carl\\tools\\version_real.dll"
 static HMODULE g_rv;
+static HINSTANCE g_hself;    /* our own module, for locating version_real.dll */
 typedef unsigned long (WINAPI *p_sizeW)(const wchar_t*, unsigned long*);
 typedef unsigned long (WINAPI *p_sizeA)(const char*, unsigned long*);
 typedef int (WINAPI *p_getW)(const wchar_t*, unsigned long, unsigned long, void*);
@@ -288,8 +288,18 @@ static void maybe_spawn(void){
 static void load_real(void){
     maybe_spawn();
     if(g_rv) return;
+    /* Portable: load "version_real.dll" from next to THIS dll; if it isn't there,
+     * copy the system's real version.dll into place. Works on Wine and Windows. */
+    wchar_t self[MAX_PATH], real[MAX_PATH], sys[MAX_PATH];
+    DWORD n=GetModuleFileNameW(g_hself, self, MAX_PATH);
+    if(n==0||n>=MAX_PATH){ dlog("load_real: GetModuleFileName failed"); return; }
+    wchar_t* slash=wcsrchr(self, L'\\');
+    if(slash) *(slash+1)=0; else self[0]=0;
+    wcscpy(real, self); wcscat(real, L"version_real.dll");
+    /* refresh from the host's real version.dll (replaces a stale Wine copy on Windows) */
+    if(GetSystemDirectoryW(sys, MAX_PATH)){ wcscat(sys, L"\\version.dll"); CopyFileW(sys, real, FALSE); }
     dlog("load_real: before LoadLibrary version_real");
-    g_rv = LoadLibraryW(RV_PATH);
+    g_rv = LoadLibraryW(real);
     dlogp("load_real: g_rv=", (void*)g_rv);
     if(!g_rv) return;
     r_sizeW=(p_sizeW)GetProcAddress(g_rv,"GetFileVersionInfoSizeW");
@@ -313,6 +323,7 @@ __declspec(dllexport) int WINAPI GetFileVersionInfoExW(unsigned long flags, cons
 BOOL WINAPI DllMain(HINSTANCE h,DWORD r,LPVOID x){
     (void)x;
     if(r==DLL_PROCESS_ATTACH){
+        g_hself=h;
         DisableThreadLibraryCalls(h);
         dlog("DllMain attach: before hide");
         hide_module((void*)h);            /* must run early, before the 640ms scan */
